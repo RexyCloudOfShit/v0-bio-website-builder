@@ -107,13 +107,11 @@ export default function SignUpPage() {
     }
 
     try {
-      const redirectUrl = process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || `${PRODUCTION_URL}/auth/callback`
-
       const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: redirectUrl,
+          emailRedirectTo: "https://niga.bio/auth/callback",
           data: {
             username: cleanUsername,
             display_name: username,

@@ -9,8 +9,6 @@ import { Label } from "@/components/ui/label"
 import Link from "next/link"
 import { useState } from "react"
 
-const PRODUCTION_URL = "https://niga.bio"
-
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("")
   const [error, setError] = useState<string | null>(null)
@@ -24,10 +22,8 @@ export default function ForgotPasswordPage() {
 
     const supabase = createClient()
 
-    const redirectUrl = process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || `${PRODUCTION_URL}/reset-password`
-
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: redirectUrl,
+      redirectTo: "https://niga.bio/reset-password",
     })
 
     if (error) {
@@ -40,25 +36,31 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-background">
-      <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-background to-blue-900/20" />
+    <div className="min-h-screen flex items-center justify-center p-4 bg-[#0a0a0f]">
+      <div className="absolute inset-0">
+        <div className="absolute top-1/4 -left-20 w-72 h-72 bg-purple-600/20 rounded-full blur-[100px]" />
+        <div className="absolute bottom-1/4 -right-20 w-72 h-72 bg-pink-600/20 rounded-full blur-[100px]" />
+      </div>
 
-      <Card className="w-full max-w-md relative z-10 bg-card/80 backdrop-blur-xl border-border">
+      <Card className="w-full max-w-md relative z-10 bg-white/[0.03] backdrop-blur-xl border-white/10">
         <CardHeader className="text-center">
-          <Link href="/" className="text-2xl font-bold text-primary mb-2">
+          <Link
+            href="/"
+            className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mb-2 inline-block"
+          >
             niga.bio
           </Link>
-          <CardTitle className="text-xl">Forgot Password</CardTitle>
-          <CardDescription>Enter your email to reset your password</CardDescription>
+          <CardTitle className="text-xl text-white">Forgot Password</CardTitle>
+          <CardDescription className="text-white/50">Enter your email to reset your password</CardDescription>
         </CardHeader>
         <CardContent>
           {success ? (
             <div className="text-center">
-              <p className="text-sm text-muted-foreground mb-4">
+              <p className="text-sm text-white/60 mb-4">
                 If an account exists with that email, you will receive a password reset link.
               </p>
               <Link href="/login">
-                <Button variant="outline" className="w-full bg-transparent">
+                <Button variant="outline" className="w-full bg-white/5 border-white/10 text-white hover:bg-white/10">
                   Back to Login
                 </Button>
               </Link>
@@ -67,7 +69,9 @@ export default function ForgotPasswordPage() {
             <form onSubmit={handleReset}>
               <div className="flex flex-col gap-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email" className="text-white/80">
+                    Email
+                  </Label>
                   <Input
                     id="email"
                     type="email"
@@ -75,16 +79,21 @@ export default function ForgotPasswordPage() {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    className="bg-white/5 border-white/10 focus:border-purple-500/50 text-white placeholder:text-white/30"
                   />
                 </div>
-                {error && <p className="text-sm text-destructive">{error}</p>}
-                <Button type="submit" className="w-full" disabled={isLoading}>
+                {error && <p className="text-sm text-red-400 bg-red-500/10 p-2 rounded">{error}</p>}
+                <Button
+                  type="submit"
+                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 border-0"
+                  disabled={isLoading}
+                >
                   {isLoading ? "Sending..." : "Send Reset Link"}
                 </Button>
               </div>
-              <div className="mt-4 text-center text-sm text-muted-foreground">
+              <div className="mt-4 text-center text-sm text-white/40">
                 Remember your password?{" "}
-                <Link href="/login" className="text-primary underline underline-offset-4">
+                <Link href="/login" className="text-purple-400 hover:text-purple-300 transition-colors">
                   Login
                 </Link>
               </div>
