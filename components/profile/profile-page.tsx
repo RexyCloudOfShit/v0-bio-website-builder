@@ -39,7 +39,6 @@ export function ProfilePage({ profile, socialLinks, isPreview = false, onPositio
       if (!isPreview) return
       const rect = (e.target as HTMLElement).closest("[data-card]")?.getBoundingClientRect()
       if (!rect) return
-
       setIsDragging(true)
       setDragOffset({
         x: e.clientX - rect.left - rect.width / 2,
@@ -52,15 +51,10 @@ export function ProfilePage({ profile, socialLinks, isPreview = false, onPositio
   const handleMouseMove = useCallback(
     (e: React.MouseEvent) => {
       if (!isDragging || !containerRef.current) return
-
       const rect = containerRef.current.getBoundingClientRect()
       const x = ((e.clientX - rect.left - dragOffset.x) / rect.width) * 100
       const y = ((e.clientY - rect.top - dragOffset.y) / rect.height) * 100
-
-      const clampedX = Math.max(10, Math.min(90, x))
-      const clampedY = Math.max(10, Math.min(90, y))
-
-      setCardPosition({ x: clampedX, y: clampedY })
+      setCardPosition({ x: Math.max(10, Math.min(90, x)), y: Math.max(10, Math.min(90, y)) })
     },
     [isDragging, dragOffset],
   )
@@ -78,16 +72,13 @@ export function ProfilePage({ profile, socialLinks, isPreview = false, onPositio
 
   const cursorStyle = useMemo(() => {
     if (profile.cursor_type === "hidden") return "none"
-    if (profile.cursor_type === "custom") {
-      if (profile.cursor_image_url) {
-        return `url(${profile.cursor_image_url}) 16 16, auto`
-      }
-      return "none"
+    if (profile.cursor_type === "custom" && profile.cursor_image) {
+      return `url(${profile.cursor_image}) 16 16, auto`
     }
     return "auto"
-  }, [profile.cursor_type, profile.cursor_image_url])
+  }, [profile.cursor_type, profile.cursor_image])
 
-  const showCustomCursor = profile.cursor_type === "custom" && !profile.cursor_image_url
+  const showCustomCursor = profile.cursor_type === "custom" && !profile.cursor_image
 
   if (!hasEntered) {
     return (
@@ -98,23 +89,22 @@ export function ProfilePage({ profile, socialLinks, isPreview = false, onPositio
         {profile.background_type === "color" && (
           <div className="absolute inset-0 blur-xl" style={{ backgroundColor: profile.background_color }} />
         )}
-        {profile.background_type === "image" && profile.background_image_url && (
+        {profile.background_type === "image" && profile.background_image && (
           <div
             className="absolute inset-0 bg-cover bg-center bg-no-repeat blur-xl scale-110"
-            style={{ backgroundImage: `url(${profile.background_image_url})` }}
+            style={{ backgroundImage: `url(${profile.background_image})` }}
           />
         )}
-        {profile.background_type === "video" && profile.background_video_url && (
+        {profile.background_type === "video" && profile.background_video && (
           <video
             className="absolute inset-0 w-full h-full object-cover blur-xl scale-110"
-            src={profile.background_video_url}
+            src={profile.background_video}
             autoPlay
             loop
             muted
             playsInline
           />
         )}
-
         <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-50">
           <div className="text-center animate-pulse">
             <MousePointer className="w-12 h-12 mx-auto mb-4 text-white" />
@@ -134,28 +124,22 @@ export function ProfilePage({ profile, socialLinks, isPreview = false, onPositio
       onMouseLeave={handleMouseUp}
       style={{ cursor: cursorStyle }}
     >
-      {profile.cursor_type === "hidden" && (
-        <style>{`
-          * { cursor: none !important; }
-        `}</style>
-      )}
+      {profile.cursor_type === "hidden" && <style>{"* { cursor: none !important; }"}</style>}
 
       {profile.background_type === "color" && (
         <div className="absolute inset-0" style={{ backgroundColor: profile.background_color }} />
       )}
-
-      {profile.background_type === "image" && profile.background_image_url && (
+      {profile.background_type === "image" && profile.background_image && (
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{ backgroundImage: `url(${profile.background_image_url})` }}
+          style={{ backgroundImage: `url(${profile.background_image})` }}
         />
       )}
-
-      {profile.background_type === "video" && profile.background_video_url && (
+      {profile.background_type === "video" && profile.background_video && (
         <video
           ref={videoRef}
           className="absolute inset-0 w-full h-full object-cover"
-          src={profile.background_video_url}
+          src={profile.background_video}
           autoPlay
           loop
           muted={!shouldPlayVideoAudio}
@@ -172,29 +156,26 @@ export function ProfilePage({ profile, socialLinks, isPreview = false, onPositio
           size={profile.snow_size}
           color={profile.snow_color}
           opacity={profile.snow_opacity}
-          useImage={profile.snow_use_image}
-          imageUrl={profile.snow_image_url}
-          rotation={profile.snow_rotation}
-          sway={profile.snow_sway}
+          imageUrl={profile.snow_image}
           containerRef={isPreview ? containerRef : undefined}
         />
       )}
 
-      {profile.mouse_trail_enabled && profile.cursor_type !== "hidden" && (
+      {profile.trail_enabled && profile.cursor_type !== "hidden" && (
         <MouseTrail
-          color={profile.mouse_trail_color}
-          length={profile.mouse_trail_length}
-          size={profile.mouse_trail_size || 10}
-          fade={profile.mouse_trail_fade !== false}
-          rainbow={profile.mouse_trail_rainbow || false}
+          color={profile.trail_color}
+          length={profile.trail_length}
+          size={profile.trail_size || 4}
+          rainbow={profile.trail_rainbow || false}
           containerRef={isPreview ? containerRef : undefined}
         />
       )}
 
-      {profile.click_effect_enabled && (
+      {profile.click_effect_type && profile.click_effect_type !== "none" && (
         <ClickEffect
           type={profile.click_effect_type}
           color={profile.click_effect_color}
+          size={profile.click_effect_size}
           containerRef={isPreview ? containerRef : undefined}
         />
       )}
@@ -213,26 +194,25 @@ export function ProfilePage({ profile, socialLinks, isPreview = false, onPositio
         }}
         onMouseDown={handleMouseDown}
       >
-        <ProfileCard profile={profile} socialLinks={socialLinks} isPreview={isPreview} />
+        <ProfileCard profile={profile} socialLinks={socialLinks} />
       </div>
 
-      {hasAudio && (
+      {hasAudio && profile.show_audio_controls && (
         <div
           className="absolute z-20"
           style={{
             left: `${cardPosition.x}%`,
-            top: `calc(${cardPosition.y}% + 60px)`,
+            top: `calc(${cardPosition.y}% + 180px)`,
             transform: "translateX(-50%)",
           }}
         >
           <AudioPlayer
             src={audioSource || ""}
             videoRef={shouldPlayVideoAudio ? videoRef : undefined}
-            autoplay={profile.audio_autoplay}
-            loop={profile.audio_loop}
-            showVolume={profile.show_volume_slider}
-            showBassBoost={profile.show_bass_boost}
-            showTempo={profile.show_tempo_slider}
+            volume={profile.audio_volume}
+            bassBoost={profile.audio_bass_boost}
+            tempo={profile.audio_tempo}
+            preservePitch={profile.audio_preserve_pitch}
             isPreview={isPreview}
           />
         </div>

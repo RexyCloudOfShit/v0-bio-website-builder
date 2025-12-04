@@ -31,26 +31,24 @@ export async function generateMetadata({ params }: Props) {
   }
 
   const supabase = await createClient()
-
   const { data: profile } = await supabase
     .from("profiles")
-    .select("display_name, bio, avatar_url, og_title, og_description, og_image_url")
+    .select("display_name, bio, avatar_url, page_title, page_description, og_image")
     .eq("username", lowerUsername)
     .maybeSingle()
 
   if (!profile) {
-    return {
-      title: "Profile Not Found | niga.bio",
-    }
+    return { title: "Profile Not Found | niga.bio" }
   }
 
   return {
-    title: profile.og_title || `${profile.display_name || username} | niga.bio`,
-    description: profile.og_description || profile.bio || `Check out ${profile.display_name || username}'s bio page`,
+    title: profile.page_title || `${profile.display_name || username} | niga.bio`,
+    description: profile.page_description || profile.bio || `Check out ${profile.display_name || username}'s bio page`,
     openGraph: {
-      title: profile.og_title || `${profile.display_name || username} | niga.bio`,
-      description: profile.og_description || profile.bio || `Check out ${profile.display_name || username}'s bio page`,
-      images: profile.og_image_url ? [profile.og_image_url] : profile.avatar_url ? [profile.avatar_url] : [],
+      title: profile.page_title || `${profile.display_name || username} | niga.bio`,
+      description:
+        profile.page_description || profile.bio || `Check out ${profile.display_name || username}'s bio page`,
+      images: profile.og_image ? [profile.og_image] : profile.avatar_url ? [profile.avatar_url] : [],
     },
   }
 }
@@ -75,18 +73,11 @@ export default async function UserProfilePage({ params }: Props) {
     notFound()
   }
 
-  // Increment visit count
-  await supabase
-    .from("profiles")
-    .update({ visit_count: (profile.visit_count || 0) + 1 })
-    .eq("id", profile.id)
-
-  // Fetch social links
   const { data: socialLinks } = await supabase
     .from("social_links")
     .select("*")
     .eq("profile_id", profile.id)
-    .order("display_order", { ascending: true })
+    .order("sort_order", { ascending: true })
 
   return (
     <ProfilePage profile={profile as Profile} socialLinks={(socialLinks || []) as SocialLink[]} isPreview={false} />
