@@ -49,10 +49,7 @@ export function ProfileTab({ profile, updateProfile }: ProfileTabProps) {
       <div className="pt-4 border-t border-border">
         <div className="text-sm text-muted-foreground">
           <p>
-            Visit count: <span className="text-foreground font-medium">{profile.visit_count}</span>
-          </p>
-          <p>
-            Your URL: <span className="text-primary">niga.bio/u/{profile.username}</span>
+            Your URL: <span className="text-primary">niga.bio/{profile.username}</span>
           </p>
         </div>
       </div>

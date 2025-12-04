@@ -41,6 +41,7 @@ export interface Profile {
   card_border_radius: number
   card_blur: number
   card_tilt_enabled: boolean
+  card_tilt_intensity: number // Added tilt intensity
   card_glow_enabled: boolean
   card_glow_color: string
   card_border_enabled: boolean
@@ -82,9 +83,6 @@ export interface Profile {
   badges: Badge[]
 
   // Stats
-  visit_count: number
-  show_visit_counter: boolean
-
   og_title: string | null
   og_description: string | null
   og_image_url: string | null
@@ -174,6 +172,7 @@ export const DEFAULT_PROFILE: Partial<Profile> = {
   card_border_radius: 16,
   card_blur: 10,
   card_tilt_enabled: true,
+  card_tilt_intensity: 10, // Added default tilt intensity
   card_glow_enabled: false,
   card_glow_color: "#ffffff",
   card_border_enabled: false,
@@ -200,8 +199,6 @@ export const DEFAULT_PROFILE: Partial<Profile> = {
   show_bass_boost: false,
   show_tempo_slider: false,
   badges: [],
-  visit_count: 0,
-  show_visit_counter: false, // Off by default
   og_title: null,
   og_description: null,
   og_image_url: null,

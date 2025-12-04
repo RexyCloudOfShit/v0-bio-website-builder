@@ -116,6 +116,19 @@ export function CardTab({ profile, updateProfile }: CardTabProps) {
           />
         </div>
 
+        {profile.card_tilt_enabled && (
+          <div className="space-y-2">
+            <Label>Tilt Intensity: {profile.card_tilt_intensity || 10}°</Label>
+            <Slider
+              value={[profile.card_tilt_intensity || 10]}
+              onValueChange={([value]) => updateProfile({ card_tilt_intensity: value })}
+              min={1}
+              max={30}
+              step={1}
+            />
+          </div>
+        )}
+
         <div className="flex items-center justify-between">
           <Label htmlFor="card_glow">Glow Effect</Label>
           <Switch
@@ -132,19 +145,6 @@ export function CardTab({ profile, updateProfile }: CardTabProps) {
             onChange={(value) => updateProfile({ card_glow_color: value })}
           />
         )}
-      </div>
-
-      <div className="border-t border-border pt-4 space-y-3">
-        <h4 className="font-medium">Visit Counter</h4>
-
-        <div className="flex items-center justify-between">
-          <Label htmlFor="show_visits">Show Visit Counter</Label>
-          <Switch
-            id="show_visits"
-            checked={profile.show_visit_counter}
-            onCheckedChange={(checked) => updateProfile({ show_visit_counter: checked })}
-          />
-        </div>
       </div>
 
       <div className="border-t border-border pt-4 space-y-3">

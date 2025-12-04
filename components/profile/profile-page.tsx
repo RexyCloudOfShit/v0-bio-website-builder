@@ -200,15 +200,7 @@ export function ProfilePage({ profile, socialLinks, isPreview = false, onPositio
       )}
 
       {showCustomCursor && (
-        <CustomCursor color={profile.cursor_color} containerRef={isPreview ? containerRef : undefined} />
-      )}
-
-      {profile.show_visit_counter && (
-        <div className="absolute bottom-4 left-4 z-20">
-          <div className="text-xs text-white/60 bg-black/40 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/10">
-            {(profile.visit_count || 0).toLocaleString()} views
-          </div>
-        </div>
+        <CustomCursor color={profile.cursor_color || "#ffffff"} containerRef={isPreview ? containerRef : undefined} />
       )}
 
       <div
@@ -229,7 +221,7 @@ export function ProfilePage({ profile, socialLinks, isPreview = false, onPositio
           className="absolute z-20"
           style={{
             left: `${cardPosition.x}%`,
-            top: `calc(${cardPosition.y}% + 180px)`,
+            top: `calc(${cardPosition.y}% + 60px)`,
             transform: "translateX(-50%)",
           }}
         >

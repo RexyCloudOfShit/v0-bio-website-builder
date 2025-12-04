@@ -80,51 +80,6 @@ export function EmbedTab({ profile, updateProfile }: EmbedTabProps) {
       </div>
 
       <div className="border-t border-border pt-4 space-y-4">
-        <h4 className="font-medium text-foreground">Visit Counter</h4>
-
-        <div className="flex items-center justify-between">
-          <Label className="text-foreground">Show Visit Counter</Label>
-          <Switch
-            checked={profile.show_visit_counter}
-            onCheckedChange={(checked) => updateProfile({ show_visit_counter: checked })}
-          />
-        </div>
-
-        {profile.show_visit_counter && (
-          <>
-            <div className="flex items-center justify-between">
-              <Label className="text-foreground">Dock to Card</Label>
-              <Switch
-                checked={profile.visit_counter_docked}
-                onCheckedChange={(checked) => updateProfile({ visit_counter_docked: checked })}
-              />
-            </div>
-
-            {profile.visit_counter_docked && (
-              <div className="space-y-2">
-                <Label className="text-foreground">Dock Position</Label>
-                <div className="grid grid-cols-4 gap-2">
-                  {(["top", "bottom", "left", "right"] as const).map((pos) => (
-                    <button
-                      key={pos}
-                      onClick={() => updateProfile({ visit_counter_dock_position: pos })}
-                      className={`px-3 py-2 text-xs rounded border transition-colors ${
-                        profile.visit_counter_dock_position === pos
-                          ? "bg-primary text-primary-foreground border-primary"
-                          : "bg-background border-border hover:border-primary/50 text-foreground"
-                      }`}
-                    >
-                      {pos.charAt(0).toUpperCase() + pos.slice(1)}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </>
-        )}
-      </div>
-
-      <div className="border-t border-border pt-4 space-y-4">
         <h4 className="font-medium text-foreground">Site Title Animation</h4>
 
         <div className="flex items-center justify-between">
