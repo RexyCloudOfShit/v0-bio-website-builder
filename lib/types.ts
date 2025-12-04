@@ -82,42 +82,6 @@ export interface SocialLink {
   created_at: string
 }
 
-export const PLATFORMS = [
-  "discord",
-  "steam",
-  "xbox",
-  "twitter",
-  "instagram",
-  "youtube",
-  "tiktok",
-  "github",
-  "twitch",
-  "spotify",
-  "snapchat",
-  "reddit",
-  "linkedin",
-  "kick",
-  "custom",
-] as const
-
-export const BRAND_COLORS: Record<string, { icon: string; bg: string }> = {
-  discord: { icon: "#5865F2", bg: "rgba(88, 101, 242, 0.2)" },
-  steam: { icon: "#171a21", bg: "rgba(23, 26, 33, 0.4)" },
-  xbox: { icon: "#107C10", bg: "rgba(16, 124, 16, 0.2)" },
-  twitter: { icon: "#1DA1F2", bg: "rgba(29, 161, 242, 0.2)" },
-  instagram: { icon: "#E4405F", bg: "rgba(228, 64, 95, 0.2)" },
-  youtube: { icon: "#FF0000", bg: "rgba(255, 0, 0, 0.2)" },
-  tiktok: { icon: "#000000", bg: "rgba(0, 0, 0, 0.4)" },
-  github: { icon: "#ffffff", bg: "rgba(255, 255, 255, 0.1)" },
-  twitch: { icon: "#9146FF", bg: "rgba(145, 70, 255, 0.2)" },
-  spotify: { icon: "#1DB954", bg: "rgba(29, 185, 84, 0.2)" },
-  snapchat: { icon: "#FFFC00", bg: "rgba(255, 252, 0, 0.15)" },
-  reddit: { icon: "#FF4500", bg: "rgba(255, 69, 0, 0.2)" },
-  linkedin: { icon: "#0A66C2", bg: "rgba(10, 102, 194, 0.2)" },
-  kick: { icon: "#53FC18", bg: "rgba(83, 252, 24, 0.2)" },
-  custom: { icon: "#ffffff", bg: "rgba(255, 255, 255, 0.1)" },
-}
-
 export const DEFAULT_PROFILE: Partial<Profile> = {
   background_type: "color",
   background_color: "#0a0a0a",
@@ -158,3 +122,30 @@ export const DEFAULT_PROFILE: Partial<Profile> = {
   click_effect_size: 30,
   click_to_enter: false,
 }
+
+export const PLATFORMS = [
+  { id: "discord", name: "Discord", color: "#5865F2" },
+  { id: "twitter", name: "Twitter/X", color: "#000000" },
+  { id: "instagram", name: "Instagram", color: "#E4405F" },
+  { id: "youtube", name: "YouTube", color: "#FF0000" },
+  { id: "tiktok", name: "TikTok", color: "#000000" },
+  { id: "twitch", name: "Twitch", color: "#9146FF" },
+  { id: "spotify", name: "Spotify", color: "#1DB954" },
+  { id: "github", name: "GitHub", color: "#ffffff" },
+  { id: "steam", name: "Steam", color: "#00adee" },
+  { id: "xbox", name: "Xbox", color: "#107C10" },
+  { id: "snapchat", name: "Snapchat", color: "#FFFC00" },
+  { id: "reddit", name: "Reddit", color: "#FF4500" },
+  { id: "linkedin", name: "LinkedIn", color: "#0A66C2" },
+  { id: "custom", name: "Custom", color: "#ffffff" },
+] as const
+
+export const CLICK_EFFECTS = [
+  { id: "none", name: "None" },
+  { id: "ripple", name: "Ripple" },
+  { id: "particles", name: "Particles" },
+  { id: "hearts", name: "Hearts" },
+  { id: "stars", name: "Stars" },
+  { id: "confetti", name: "Confetti" },
+  { id: "ring", name: "Ring" },
+] as const

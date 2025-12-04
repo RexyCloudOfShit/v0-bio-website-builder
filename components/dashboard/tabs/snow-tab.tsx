@@ -1,132 +1,95 @@
 "use client"
 
-import type { Profile } from "@/lib/types"
 import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
 import { Slider } from "@/components/ui/slider"
+import { Switch } from "@/components/ui/switch"
 import { ColorPicker } from "@/components/ui/color-picker"
 import { FileUpload } from "@/components/ui/file-upload"
+import type { Profile } from "@/lib/types"
 
-interface SnowTabProps {
+interface Props {
   profile: Profile
-  updateProfile: (updates: Partial<Profile>) => void
+  onChange: (updates: Partial<Profile>) => void
 }
 
-export function SnowTab({ profile, updateProfile }: SnowTabProps) {
+export function SnowTab({ profile, onChange }: Props) {
   return (
     <div className="space-y-4">
-      <h3 className="font-semibold text-lg">Particle Effects</h3>
-
       <div className="flex items-center justify-between">
-        <Label htmlFor="snow_enabled">Enable Particles</Label>
-        <Switch
-          id="snow_enabled"
-          checked={profile.snow_enabled}
-          onCheckedChange={(checked) => updateProfile({ snow_enabled: checked })}
-        />
+        <Label className="text-white/70 text-sm">Enable Particles</Label>
+        <Switch checked={profile.snow_enabled} onCheckedChange={(v) => onChange({ snow_enabled: v })} />
       </div>
 
       {profile.snow_enabled && (
         <>
-          <div className="flex items-center justify-between">
-            <Label htmlFor="snow_use_image">Use Custom Image</Label>
-            <Switch
-              id="snow_use_image"
-              checked={profile.snow_use_image}
-              onCheckedChange={(checked) => updateProfile({ snow_use_image: checked })}
-            />
-          </div>
-
-          {profile.snow_use_image ? (
-            <div className="space-y-2">
-              <Label>Particle Image</Label>
-              <FileUpload
-                accept="image"
-                value={profile.snow_image_url || ""}
-                onChange={(url) => updateProfile({ snow_image_url: url })}
-              />
-            </div>
-          ) : (
-            <ColorPicker
-              label="Particle Color"
-              value={profile.snow_color}
-              onChange={(value) => updateProfile({ snow_color: value })}
-            />
-          )}
-
-          <div className="space-y-2">
-            <Label>Particle Count: {profile.snow_count}</Label>
+          <div>
+            <Label className="text-white/70 text-sm">Count: {profile.snow_count}</Label>
             <Slider
               value={[profile.snow_count]}
-              onValueChange={([value]) => updateProfile({ snow_count: value })}
+              onValueChange={([v]) => onChange({ snow_count: v })}
               min={10}
-              max={500}
-              step={10}
+              max={200}
+              step={5}
+              className="mt-2"
             />
           </div>
 
-          <div className="space-y-2">
-            <Label>Fall Speed: {profile.snow_speed.toFixed(1)}x</Label>
+          <div>
+            <Label className="text-white/70 text-sm">Speed: {profile.snow_speed}x</Label>
             <Slider
               value={[profile.snow_speed]}
-              onValueChange={([value]) => updateProfile({ snow_speed: value })}
+              onValueChange={([v]) => onChange({ snow_speed: v })}
               min={0.1}
               max={3}
               step={0.1}
+              className="mt-2"
             />
           </div>
 
-          <div className="space-y-2">
-            <Label>Wind: {profile.snow_wind.toFixed(1)}</Label>
+          <div>
+            <Label className="text-white/70 text-sm">Wind: {profile.snow_wind}</Label>
             <Slider
               value={[profile.snow_wind]}
-              onValueChange={([value]) => updateProfile({ snow_wind: value })}
+              onValueChange={([v]) => onChange({ snow_wind: v })}
               min={-2}
               max={2}
               step={0.1}
+              className="mt-2"
             />
           </div>
 
-          <div className="space-y-2">
-            <Label>Size: {profile.snow_size.toFixed(1)}x</Label>
+          <div>
+            <Label className="text-white/70 text-sm">Size: {profile.snow_size}x</Label>
             <Slider
               value={[profile.snow_size]}
-              onValueChange={([value]) => updateProfile({ snow_size: value })}
+              onValueChange={([v]) => onChange({ snow_size: v })}
               min={0.5}
-              max={5}
-              step={0.1}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label>Sway Amount: {profile.snow_sway.toFixed(1)}x</Label>
-            <Slider
-              value={[profile.snow_sway]}
-              onValueChange={([value]) => updateProfile({ snow_sway: value })}
-              min={0}
               max={3}
               step={0.1}
+              className="mt-2"
             />
           </div>
 
-          <div className="space-y-2">
-            <Label>Opacity: {(profile.snow_opacity * 100).toFixed(0)}%</Label>
+          <div>
+            <Label className="text-white/70 text-sm">Opacity: {Math.round(profile.snow_opacity * 100)}%</Label>
             <Slider
               value={[profile.snow_opacity]}
-              onValueChange={([value]) => updateProfile({ snow_opacity: value })}
+              onValueChange={([v]) => onChange({ snow_opacity: v })}
               min={0.1}
               max={1}
               step={0.05}
+              className="mt-2"
             />
           </div>
 
-          <div className="flex items-center justify-between">
-            <Label htmlFor="snow_rotation">Enable Rotation</Label>
-            <Switch
-              id="snow_rotation"
-              checked={profile.snow_rotation}
-              onCheckedChange={(checked) => updateProfile({ snow_rotation: checked })}
-            />
+          <div>
+            <Label className="text-white/70 text-sm mb-2 block">Color</Label>
+            <ColorPicker value={profile.snow_color} onChange={(v) => onChange({ snow_color: v })} />
+          </div>
+
+          <div>
+            <Label className="text-white/70 text-sm mb-2 block">Custom Image</Label>
+            <FileUpload value={profile.snow_image} onChange={(url) => onChange({ snow_image: url })} type="image" />
           </div>
         </>
       )}

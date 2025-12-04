@@ -1,183 +1,114 @@
 "use client"
 
-import type { Profile } from "@/lib/types"
 import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
 import { Slider } from "@/components/ui/slider"
+import { Switch } from "@/components/ui/switch"
 import { ColorPicker } from "@/components/ui/color-picker"
+import type { Profile } from "@/lib/types"
 
-interface CardTabProps {
+interface Props {
   profile: Profile
-  updateProfile: (updates: Partial<Profile>) => void
+  onChange: (updates: Partial<Profile>) => void
 }
 
-export function CardTab({ profile, updateProfile }: CardTabProps) {
+export function CardTab({ profile, onChange }: Props) {
   return (
     <div className="space-y-4">
-      <h3 className="font-semibold text-lg">Card Settings</h3>
-
-      <div className="flex items-center justify-between">
-        <Label htmlFor="click_enter">Click to Enter</Label>
-        <Switch
-          id="click_enter"
-          checked={profile.click_to_enter || false}
-          onCheckedChange={(checked) => updateProfile({ click_to_enter: checked })}
-        />
-      </div>
-      <p className="text-xs text-muted-foreground">Blur page until visitor clicks to enter</p>
-
-      <div className="border-t border-border pt-4 space-y-2">
-        <Label>Padding: {profile.card_padding}px</Label>
+      <div>
+        <Label className="text-white/70 text-sm">Padding: {profile.card_padding}px</Label>
         <Slider
           value={[profile.card_padding]}
-          onValueChange={([value]) => updateProfile({ card_padding: value })}
-          min={8}
-          max={64}
-          step={4}
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label>Border Radius: {profile.card_border_radius}px</Label>
-        <Slider
-          value={[profile.card_border_radius]}
-          onValueChange={([value]) => updateProfile({ card_border_radius: value })}
+          onValueChange={([v]) => onChange({ card_padding: v })}
           min={0}
           max={48}
           step={4}
+          className="mt-2"
         />
       </div>
 
-      <div className="space-y-2">
-        <Label>Blur: {profile.card_blur}px</Label>
+      <div>
+        <Label className="text-white/70 text-sm">Border Radius: {profile.card_border_radius}px</Label>
+        <Slider
+          value={[profile.card_border_radius]}
+          onValueChange={([v]) => onChange({ card_border_radius: v })}
+          min={0}
+          max={32}
+          step={2}
+          className="mt-2"
+        />
+      </div>
+
+      <div>
+        <Label className="text-white/70 text-sm">Blur: {profile.card_blur}px</Label>
         <Slider
           value={[profile.card_blur]}
-          onValueChange={([value]) => updateProfile({ card_blur: value })}
+          onValueChange={([v]) => onChange({ card_blur: v })}
           min={0}
           max={30}
-          step={2}
+          step={1}
+          className="mt-2"
         />
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="card_bg">Card Background</Label>
-        <ColorPicker
-          id="card_bg"
-          label="Card Background"
-          value={profile.card_background}
-          onChange={(value) => updateProfile({ card_background: value })}
-          showAlpha
-        />
-        <p className="text-xs text-muted-foreground">Use rgba for transparency</p>
+      <div className="flex items-center justify-between">
+        <Label className="text-white/70 text-sm">Glow Effect</Label>
+        <Switch checked={profile.card_glow_enabled} onCheckedChange={(v) => onChange({ card_glow_enabled: v })} />
       </div>
 
-      <div className="border-t border-border pt-4 space-y-3">
-        <h4 className="font-medium">Border</h4>
-
-        <div className="flex items-center justify-between">
-          <Label htmlFor="card_border">Enable Border</Label>
-          <Switch
-            id="card_border"
-            checked={profile.card_border_enabled}
-            onCheckedChange={(checked) => updateProfile({ card_border_enabled: checked })}
-          />
+      {profile.card_glow_enabled && (
+        <div>
+          <Label className="text-white/70 text-sm mb-2 block">Glow Color</Label>
+          <ColorPicker value={profile.card_glow_color} onChange={(v) => onChange({ card_glow_color: v })} />
         </div>
+      )}
 
-        {profile.card_border_enabled && (
-          <>
-            <ColorPicker
-              label="Border Color"
-              value={profile.card_border_color}
-              onChange={(value) => updateProfile({ card_border_color: value })}
-            />
-            <div className="space-y-2">
-              <Label>Border Width: {profile.card_border_width}px</Label>
-              <Slider
-                value={[profile.card_border_width]}
-                onValueChange={([value]) => updateProfile({ card_border_width: value })}
-                min={1}
-                max={8}
-                step={1}
-              />
-            </div>
-          </>
-        )}
+      <div className="flex items-center justify-between">
+        <Label className="text-white/70 text-sm">3D Tilt</Label>
+        <Switch checked={profile.card_tilt_enabled} onCheckedChange={(v) => onChange({ card_tilt_enabled: v })} />
       </div>
 
-      <div className="border-t border-border pt-4 space-y-3">
-        <h4 className="font-medium">Effects</h4>
-
-        <div className="flex items-center justify-between">
-          <Label htmlFor="card_tilt">3D Tilt on Hover</Label>
-          <Switch
-            id="card_tilt"
-            checked={profile.card_tilt_enabled}
-            onCheckedChange={(checked) => updateProfile({ card_tilt_enabled: checked })}
+      {profile.card_tilt_enabled && (
+        <div>
+          <Label className="text-white/70 text-sm">Tilt Intensity: {profile.card_tilt_intensity}°</Label>
+          <Slider
+            value={[profile.card_tilt_intensity]}
+            onValueChange={([v]) => onChange({ card_tilt_intensity: v })}
+            min={5}
+            max={30}
+            step={1}
+            className="mt-2"
           />
         </div>
+      )}
 
-        {profile.card_tilt_enabled && (
-          <div className="space-y-2">
-            <Label>Tilt Intensity: {profile.card_tilt_intensity || 10}°</Label>
+      <div className="flex items-center justify-between">
+        <Label className="text-white/70 text-sm">Border</Label>
+        <Switch checked={profile.card_border_enabled} onCheckedChange={(v) => onChange({ card_border_enabled: v })} />
+      </div>
+
+      {profile.card_border_enabled && (
+        <>
+          <div>
+            <Label className="text-white/70 text-sm mb-2 block">Border Color</Label>
+            <ColorPicker value={profile.card_border_color} onChange={(v) => onChange({ card_border_color: v })} />
+          </div>
+          <div>
+            <Label className="text-white/70 text-sm">Border Width: {profile.card_border_width}px</Label>
             <Slider
-              value={[profile.card_tilt_intensity || 10]}
-              onValueChange={([value]) => updateProfile({ card_tilt_intensity: value })}
+              value={[profile.card_border_width]}
+              onValueChange={([v]) => onChange({ card_border_width: v })}
               min={1}
-              max={30}
+              max={5}
               step={1}
+              className="mt-2"
             />
           </div>
-        )}
+        </>
+      )}
 
-        <div className="flex items-center justify-between">
-          <Label htmlFor="card_glow">Glow Effect</Label>
-          <Switch
-            id="card_glow"
-            checked={profile.card_glow_enabled}
-            onCheckedChange={(checked) => updateProfile({ card_glow_enabled: checked })}
-          />
-        </div>
-
-        {profile.card_glow_enabled && (
-          <ColorPicker
-            label="Glow Color"
-            value={profile.card_glow_color}
-            onChange={(value) => updateProfile({ card_glow_color: value })}
-          />
-        )}
-      </div>
-
-      <div className="border-t border-border pt-4 space-y-3">
-        <h4 className="font-medium">Text Styling</h4>
-
-        <ColorPicker
-          label="Name Color"
-          value={profile.name_color}
-          onChange={(value) => updateProfile({ name_color: value })}
-        />
-
-        <div className="flex items-center justify-between">
-          <Label htmlFor="name_glow">Name Glow Effect</Label>
-          <Switch
-            id="name_glow"
-            checked={profile.name_glow_enabled}
-            onCheckedChange={(checked) => updateProfile({ name_glow_enabled: checked })}
-          />
-        </div>
-
-        {profile.name_glow_enabled && (
-          <ColorPicker
-            label="Name Glow Color"
-            value={profile.name_glow_color}
-            onChange={(value) => updateProfile({ name_glow_color: value })}
-          />
-        )}
-
-        <ColorPicker
-          label="Bio Color"
-          value={profile.bio_color}
-          onChange={(value) => updateProfile({ bio_color: value })}
-        />
+      <div className="flex items-center justify-between">
+        <Label className="text-white/70 text-sm">Click to Enter</Label>
+        <Switch checked={profile.click_to_enter} onCheckedChange={(v) => onChange({ click_to_enter: v })} />
       </div>
     </div>
   )

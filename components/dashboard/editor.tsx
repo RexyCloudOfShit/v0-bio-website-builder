@@ -1,202 +1,140 @@
 "use client"
 
-import { useState, useCallback, useRef, useEffect } from "react"
-import { createClient } from "@/lib/supabase/client"
-import type { Profile, SocialLink } from "@/lib/types"
-import { Sidebar } from "./sidebar"
-import { Preview } from "./preview"
-import { Button } from "@/components/ui/button"
-import { Save, LogOut, ExternalLink, Check } from "lucide-react"
-import Link from "next/link"
+import { useState, useCallback, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import { createClient } from "@/lib/supabase/client"
+import { LogOut, Save, Eye } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { ProfileTab } from "./tabs/profile-tab"
+import { BackgroundTab } from "./tabs/background-tab"
+import { CardTab } from "./tabs/card-tab"
+import { AudioTab } from "./tabs/audio-tab"
+import { SnowTab } from "./tabs/snow-tab"
+import { MouseTab } from "./tabs/mouse-tab"
+import { LinksTab } from "./tabs/links-tab"
+import { ProfilePreview } from "./preview"
+import type { Profile, SocialLink } from "@/lib/types"
 
-interface EditorProps {
+interface Props {
   initialProfile: Profile
-  initialSocialLinks: SocialLink[]
+  initialLinks: SocialLink[]
 }
 
-export function DashboardEditor({ initialProfile, initialSocialLinks }: EditorProps) {
+export function DashboardEditor({ initialProfile, initialLinks }: Props) {
   const [profile, setProfile] = useState<Profile>(initialProfile)
-  const [socialLinks, setSocialLinks] = useState<SocialLink[]>(initialSocialLinks)
+  const [links, setLinks] = useState<SocialLink[]>(initialLinks)
   const [saving, setSaving] = useState(false)
-  const [saved, setSaved] = useState(false)
-  const [activeTab, setActiveTab] = useState<string>("profile")
+  const [hasChanges, setHasChanges] = useState(false)
   const router = useRouter()
+  const supabase = createClient()
 
-  const saveTimeoutRef = useRef<NodeJS.Timeout>()
-  const autoSaveIntervalRef = useRef<NodeJS.Timeout>()
-  const pendingUpdatesRef = useRef<Partial<Profile>>({})
-  const hasChangesRef = useRef(false)
+  const updateProfile = useCallback((updates: Partial<Profile>) => {
+    setProfile((p) => ({ ...p, ...updates }))
+    setHasChanges(true)
+  }, [])
 
-  useEffect(() => {
-    autoSaveIntervalRef.current = setInterval(async () => {
-      if (hasChangesRef.current && Object.keys(pendingUpdatesRef.current).length > 0) {
-        const supabase = createClient()
-        await supabase
-          .from("profiles")
-          .update({
-            ...pendingUpdatesRef.current,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", profile.id)
-
-        pendingUpdatesRef.current = {}
-        hasChangesRef.current = false
-      }
-    }, 30000)
-
-    return () => {
-      if (autoSaveIntervalRef.current) clearInterval(autoSaveIntervalRef.current)
-    }
-  }, [profile.id])
-
-  const updateProfile = useCallback(
-    (updates: Partial<Profile>) => {
-      setProfile((prev) => ({ ...prev, ...updates }))
-      hasChangesRef.current = true
-
-      pendingUpdatesRef.current = { ...pendingUpdatesRef.current, ...updates }
-
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current)
-      }
-
-      saveTimeoutRef.current = setTimeout(async () => {
-        if (Object.keys(pendingUpdatesRef.current).length === 0) return
-
-        const supabase = createClient()
-        await supabase
-          .from("profiles")
-          .update({
-            ...pendingUpdatesRef.current,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", profile.id)
-
-        pendingUpdatesRef.current = {}
-        hasChangesRef.current = false
-      }, 1500)
-    },
-    [profile.id],
-  )
-
-  const saveProfile = async () => {
+  const save = async () => {
     setSaving(true)
+    await supabase.from("profiles").update(profile).eq("id", profile.id)
 
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current)
-    }
-
-    const supabase = createClient()
-
-    const { error } = await supabase
-      .from("profiles")
-      .update({
-        ...profile,
-        ...pendingUpdatesRef.current,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", profile.id)
-
-    pendingUpdatesRef.current = {}
-    hasChangesRef.current = false
-
-    if (!error) {
-      setSaved(true)
-      setTimeout(() => setSaved(false), 2000)
+    // Save links
+    await supabase.from("social_links").delete().eq("profile_id", profile.id)
+    if (links.length > 0) {
+      await supabase.from("social_links").insert(
+        links.map((link, i) => ({
+          ...link,
+          profile_id: profile.id,
+          sort_order: i,
+        })),
+      )
     }
 
     setSaving(false)
+    setHasChanges(false)
   }
 
-  const handleLogout = async () => {
-    const supabase = createClient()
+  const logout = async () => {
     await supabase.auth.signOut()
     router.push("/")
   }
 
-  const addSocialLink = async (link: Omit<SocialLink, "id" | "profile_id" | "created_at">) => {
-    const supabase = createClient()
-    const { data, error } = await supabase
-      .from("social_links")
-      .insert({
-        ...link,
-        profile_id: profile.id,
-      })
-      .select()
-      .single()
-
-    if (data && !error) {
-      setSocialLinks((prev) => [...prev, data as SocialLink])
-    }
-  }
-
-  const updateSocialLink = async (id: string, updates: Partial<SocialLink>) => {
-    const supabase = createClient()
-    await supabase.from("social_links").update(updates).eq("id", id)
-
-    setSocialLinks((prev) => prev.map((link) => (link.id === id ? { ...link, ...updates } : link)))
-  }
-
-  const deleteSocialLink = async (id: string) => {
-    const supabase = createClient()
-    await supabase.from("social_links").delete().eq("id", id)
-
-    setSocialLinks((prev) => prev.filter((link) => link.id !== id))
-  }
+  // Auto-save every 30 seconds
+  useEffect(() => {
+    if (!hasChanges) return
+    const timer = setTimeout(save, 30000)
+    return () => clearTimeout(timer)
+  }, [hasChanges, profile, links])
 
   return (
-    <div className="h-screen flex flex-col bg-background">
-      {/* Header */}
-      <header className="h-14 border-b border-border flex items-center justify-between px-4 bg-card/50 backdrop-blur-sm shrink-0">
-        <div className="flex items-center gap-4">
-          <Link href="/" className="text-xl font-bold text-primary">
-            niga.bio
-          </Link>
-          <span className="text-muted-foreground">/</span>
-          <span className="text-foreground font-medium">{profile.username}</span>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <Link href={`/${profile.username}`} target="_blank">
-            <Button variant="outline" size="sm" className="gap-2 bg-transparent">
-              <ExternalLink className="w-4 h-4" />
-              View Page
+    <div className="min-h-screen bg-[#0a0a0a] flex">
+      {/* Sidebar */}
+      <div className="w-80 border-r border-white/10 flex flex-col h-screen">
+        <div className="p-4 border-b border-white/10 flex items-center justify-between">
+          <h1 className="font-bold text-white">niga.bio</h1>
+          <div className="flex gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => window.open(`https://niga.bio/${profile.username}`, "_blank")}
+            >
+              <Eye className="w-4 h-4" />
             </Button>
-          </Link>
-          <Button
-            onClick={saveProfile}
-            disabled={saving}
-            size="sm"
-            className={`gap-2 transition-colors ${saved ? "bg-green-600 hover:bg-green-700" : ""}`}
-          >
-            {saved ? <Check className="w-4 h-4" /> : <Save className="w-4 h-4" />}
-            {saving ? "Saving..." : saved ? "Saved!" : "Save"}
-          </Button>
-          <Button variant="ghost" size="sm" onClick={handleLogout}>
-            <LogOut className="w-4 h-4" />
+            <Button variant="ghost" size="icon" onClick={logout}>
+              <LogOut className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-4">
+          <Tabs defaultValue="profile" className="w-full">
+            <TabsList className="w-full grid grid-cols-4 mb-4">
+              <TabsTrigger value="profile">Profile</TabsTrigger>
+              <TabsTrigger value="bg">BG</TabsTrigger>
+              <TabsTrigger value="card">Card</TabsTrigger>
+              <TabsTrigger value="audio">Audio</TabsTrigger>
+            </TabsList>
+            <TabsList className="w-full grid grid-cols-3 mb-4">
+              <TabsTrigger value="snow">Particles</TabsTrigger>
+              <TabsTrigger value="mouse">Mouse</TabsTrigger>
+              <TabsTrigger value="links">Links</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="profile">
+              <ProfileTab profile={profile} onChange={updateProfile} />
+            </TabsContent>
+            <TabsContent value="bg">
+              <BackgroundTab profile={profile} onChange={updateProfile} />
+            </TabsContent>
+            <TabsContent value="card">
+              <CardTab profile={profile} onChange={updateProfile} />
+            </TabsContent>
+            <TabsContent value="audio">
+              <AudioTab profile={profile} onChange={updateProfile} />
+            </TabsContent>
+            <TabsContent value="snow">
+              <SnowTab profile={profile} onChange={updateProfile} />
+            </TabsContent>
+            <TabsContent value="mouse">
+              <MouseTab profile={profile} onChange={updateProfile} />
+            </TabsContent>
+            <TabsContent value="links">
+              <LinksTab links={links} onChange={setLinks} profileId={profile.id} />
+            </TabsContent>
+          </Tabs>
+        </div>
+
+        <div className="p-4 border-t border-white/10">
+          <Button onClick={save} className="w-full" disabled={saving || !hasChanges}>
+            <Save className="w-4 h-4 mr-2" />
+            {saving ? "Saving..." : hasChanges ? "Save Changes" : "Saved"}
           </Button>
         </div>
-      </header>
+      </div>
 
-      {/* Main content */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* Sidebar */}
-        <Sidebar
-          profile={profile}
-          updateProfile={updateProfile}
-          socialLinks={socialLinks}
-          addSocialLink={addSocialLink}
-          updateSocialLink={updateSocialLink}
-          deleteSocialLink={deleteSocialLink}
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-        />
-
-        {/* Preview */}
-        <div className="flex-1 bg-muted/30 overflow-hidden">
-          <Preview profile={profile} socialLinks={socialLinks} updateProfile={updateProfile} />
-        </div>
+      {/* Preview */}
+      <div className="flex-1">
+        <ProfilePreview profile={profile} links={links} />
       </div>
     </div>
   )

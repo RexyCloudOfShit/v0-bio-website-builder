@@ -2,84 +2,50 @@ import { notFound } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import { ProfilePage } from "@/components/profile/profile-page"
 import type { Profile, SocialLink } from "@/lib/types"
+import type { Metadata } from "next"
 
-const RESERVED_ROUTES = [
-  "login",
-  "signup",
-  "dashboard",
-  "auth",
-  "api",
-  "admin",
-  "settings",
-  "profile",
-  "forgot-password",
-  "reset-password",
-  "_next",
-  "favicon.ico",
-]
+const RESERVED_ROUTES = ["login", "signup", "dashboard", "forgot-password", "reset-password", "auth", "api"]
 
 interface Props {
   params: Promise<{ username: string }>
 }
 
-export async function generateMetadata({ params }: Props) {
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { username } = await params
-  const lowerUsername = username.toLowerCase()
-
-  if (RESERVED_ROUTES.includes(lowerUsername)) {
-    return {}
-  }
+  if (RESERVED_ROUTES.includes(username)) return {}
 
   const supabase = await createClient()
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("display_name, bio, avatar_url, page_title, page_description, og_image")
-    .eq("username", lowerUsername)
-    .maybeSingle()
+  const { data: profile } = await supabase.from("profiles").select("*").eq("username", username).single()
 
-  if (!profile) {
-    return { title: "Profile Not Found | niga.bio" }
-  }
+  if (!profile) return {}
 
   return {
-    title: profile.page_title || `${profile.display_name || username} | niga.bio`,
-    description: profile.page_description || profile.bio || `Check out ${profile.display_name || username}'s bio page`,
+    title: profile.page_title || `${profile.display_name || profile.username} - niga.bio`,
+    description: profile.page_description || profile.bio || `Check out ${profile.username}'s bio page`,
     openGraph: {
-      title: profile.page_title || `${profile.display_name || username} | niga.bio`,
-      description:
-        profile.page_description || profile.bio || `Check out ${profile.display_name || username}'s bio page`,
-      images: profile.og_image ? [profile.og_image] : profile.avatar_url ? [profile.avatar_url] : [],
+      title: profile.page_title || `${profile.display_name || profile.username} - niga.bio`,
+      description: profile.page_description || profile.bio || undefined,
+      images: profile.og_image ? [profile.og_image] : undefined,
     },
   }
 }
 
 export default async function UserProfilePage({ params }: Props) {
   const { username } = await params
-  const lowerUsername = username.toLowerCase()
 
-  if (RESERVED_ROUTES.includes(lowerUsername)) {
-    return null
-  }
+  if (RESERVED_ROUTES.includes(username)) notFound()
 
   const supabase = await createClient()
 
-  const { data: profile, error } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("username", lowerUsername)
-    .maybeSingle()
+  const { data: profile } = await supabase.from("profiles").select("*").eq("username", username).single()
 
-  if (error || !profile) {
-    notFound()
-  }
+  if (!profile) notFound()
 
-  const { data: socialLinks } = await supabase
+  const { data: links } = await supabase
     .from("social_links")
     .select("*")
     .eq("profile_id", profile.id)
-    .order("sort_order", { ascending: true })
+    .order("sort_order")
 
-  return (
-    <ProfilePage profile={profile as Profile} socialLinks={(socialLinks || []) as SocialLink[]} isPreview={false} />
-  )
+  return <ProfilePage profile={profile as Profile} links={(links || []) as SocialLink[]} />
 }

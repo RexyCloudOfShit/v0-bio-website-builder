@@ -1,57 +1,45 @@
 "use client"
 
-import type { Profile } from "@/lib/types"
 import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
 import { Slider } from "@/components/ui/slider"
+import { Switch } from "@/components/ui/switch"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { ColorPicker } from "@/components/ui/color-picker"
 import { FileUpload } from "@/components/ui/file-upload"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { CLICK_EFFECTS } from "@/lib/types"
+import type { Profile } from "@/lib/types"
 
-interface MouseTabProps {
+interface Props {
   profile: Profile
-  updateProfile: (updates: Partial<Profile>) => void
+  onChange: (updates: Partial<Profile>) => void
 }
 
-const CLICK_EFFECTS = [
-  { value: "none", label: "None" },
-  { value: "ripple", label: "Ripple" },
-  { value: "particles", label: "Particles" },
-  { value: "ring", label: "Ring" },
-  { value: "explosion", label: "Explosion" },
-  { value: "pulse", label: "Pulse" },
-  { value: "hearts", label: "Hearts" },
-  { value: "stars", label: "Stars" },
-  { value: "confetti", label: "Confetti" },
-]
-
-export function MouseTab({ profile, updateProfile }: MouseTabProps) {
+export function MouseTab({ profile, onChange }: Props) {
   return (
     <div className="space-y-4">
-      <h3 className="font-semibold text-lg">Mouse Effects</h3>
-
-      <div className="space-y-3">
-        <Label>Cursor Type</Label>
+      <div>
+        <Label className="text-white/70 text-sm mb-2 block">Cursor Type</Label>
         <RadioGroup
-          value={profile.cursor_type || "default"}
-          onValueChange={(value) => updateProfile({ cursor_type: value as Profile["cursor_type"] })}
-          className="grid grid-cols-3 gap-2"
+          value={profile.cursor_type}
+          onValueChange={(v) => onChange({ cursor_type: v as Profile["cursor_type"] })}
+          className="flex gap-4"
         >
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center gap-2">
             <RadioGroupItem value="default" id="cursor-default" />
-            <Label htmlFor="cursor-default" className="cursor-pointer">
+            <Label htmlFor="cursor-default" className="text-white/70">
               Default
             </Label>
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center gap-2">
             <RadioGroupItem value="custom" id="cursor-custom" />
-            <Label htmlFor="cursor-custom" className="cursor-pointer">
+            <Label htmlFor="cursor-custom" className="text-white/70">
               Custom
             </Label>
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center gap-2">
             <RadioGroupItem value="hidden" id="cursor-hidden" />
-            <Label htmlFor="cursor-hidden" className="cursor-pointer">
+            <Label htmlFor="cursor-hidden" className="text-white/70">
               Hidden
             </Label>
           </div>
@@ -59,123 +47,101 @@ export function MouseTab({ profile, updateProfile }: MouseTabProps) {
       </div>
 
       {profile.cursor_type === "custom" && (
-        <div className="space-y-4 p-3 rounded-lg bg-muted/50 border border-border">
-          <div className="space-y-2">
-            <Label>Cursor Image (optional)</Label>
-            <FileUpload
-              type="image"
-              value={profile.cursor_image || ""}
-              onChange={(url) => updateProfile({ cursor_image: url })}
-            />
+        <>
+          <div>
+            <Label className="text-white/70 text-sm mb-2 block">Cursor Color</Label>
+            <ColorPicker value={profile.cursor_color || "#ffffff"} onChange={(v) => onChange({ cursor_color: v })} />
           </div>
-
-          <ColorPicker
-            label="Cursor Color (if no image)"
-            value={profile.cursor_color || "#ffffff"}
-            onChange={(value) => updateProfile({ cursor_color: value })}
-          />
-        </div>
+          <div>
+            <Label className="text-white/70 text-sm mb-2 block">Or Custom Image</Label>
+            <FileUpload value={profile.cursor_image} onChange={(url) => onChange({ cursor_image: url })} type="image" />
+          </div>
+        </>
       )}
 
-      <div className="border-t border-border pt-4 space-y-3">
-        <h4 className="font-medium">Mouse Trail</h4>
-
-        <div className="flex items-center justify-between">
-          <Label htmlFor="trail_enabled">Enable Trail</Label>
-          <Switch
-            id="trail_enabled"
-            checked={profile.trail_enabled || false}
-            onCheckedChange={(checked) => updateProfile({ trail_enabled: checked })}
-          />
-        </div>
-
-        {profile.trail_enabled && (
-          <div className="space-y-4 p-3 rounded-lg bg-muted/50 border border-border">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="trail_rainbow">Rainbow Mode</Label>
-              <Switch
-                id="trail_rainbow"
-                checked={profile.trail_rainbow || false}
-                onCheckedChange={(checked) => updateProfile({ trail_rainbow: checked })}
-              />
-            </div>
-
-            {!profile.trail_rainbow && (
-              <ColorPicker
-                label="Trail Color"
-                value={profile.trail_color || "#ffffff"}
-                onChange={(value) => updateProfile({ trail_color: value })}
-              />
-            )}
-
-            <div className="space-y-2">
-              <Label>Trail Length: {profile.trail_length || 20}</Label>
-              <Slider
-                value={[profile.trail_length || 20]}
-                onValueChange={([value]) => updateProfile({ trail_length: value })}
-                min={5}
-                max={50}
-                step={5}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Trail Size: {profile.trail_size || 4}px</Label>
-              <Slider
-                value={[profile.trail_size || 4]}
-                onValueChange={([value]) => updateProfile({ trail_size: value })}
-                min={2}
-                max={20}
-                step={1}
-              />
-            </div>
-          </div>
-        )}
+      <div className="flex items-center justify-between">
+        <Label className="text-white/70 text-sm">Mouse Trail</Label>
+        <Switch checked={profile.trail_enabled} onCheckedChange={(v) => onChange({ trail_enabled: v })} />
       </div>
 
-      <div className="border-t border-border pt-4 space-y-3">
-        <h4 className="font-medium">Click Effects</h4>
-
-        <div className="space-y-3">
-          <Label>Effect Type</Label>
-          <div className="grid grid-cols-3 gap-2">
-            {CLICK_EFFECTS.map((effect) => (
-              <button
-                key={effect.value}
-                onClick={() => updateProfile({ click_effect_type: effect.value })}
-                className={`px-3 py-2 text-sm rounded-md border transition-colors ${
-                  profile.click_effect_type === effect.value
-                    ? "bg-primary text-primary-foreground border-primary"
-                    : "bg-muted border-border hover:bg-accent"
-                }`}
-              >
-                {effect.label}
-              </button>
-            ))}
+      {profile.trail_enabled && (
+        <>
+          <div className="flex items-center justify-between">
+            <Label className="text-white/70 text-sm">Rainbow Mode</Label>
+            <Switch checked={profile.trail_rainbow} onCheckedChange={(v) => onChange({ trail_rainbow: v })} />
           </div>
-        </div>
 
-        {profile.click_effect_type && profile.click_effect_type !== "none" && (
-          <div className="space-y-4 p-3 rounded-lg bg-muted/50 border border-border">
-            <ColorPicker
-              label="Effect Color"
-              value={profile.click_effect_color || "#ffffff"}
-              onChange={(value) => updateProfile({ click_effect_color: value })}
+          {!profile.trail_rainbow && (
+            <div>
+              <Label className="text-white/70 text-sm mb-2 block">Trail Color</Label>
+              <ColorPicker value={profile.trail_color || "#ffffff"} onChange={(v) => onChange({ trail_color: v })} />
+            </div>
+          )}
+
+          <div>
+            <Label className="text-white/70 text-sm">Trail Length: {profile.trail_length}</Label>
+            <Slider
+              value={[profile.trail_length]}
+              onValueChange={([v]) => onChange({ trail_length: v })}
+              min={5}
+              max={50}
+              step={1}
+              className="mt-2"
             />
-
-            <div className="space-y-2">
-              <Label>Effect Size: {profile.click_effect_size || 30}px</Label>
-              <Slider
-                value={[profile.click_effect_size || 30]}
-                onValueChange={([value]) => updateProfile({ click_effect_size: value })}
-                min={10}
-                max={100}
-                step={5}
-              />
-            </div>
           </div>
-        )}
+
+          <div>
+            <Label className="text-white/70 text-sm">Trail Size: {profile.trail_size}px</Label>
+            <Slider
+              value={[profile.trail_size]}
+              onValueChange={([v]) => onChange({ trail_size: v })}
+              min={2}
+              max={12}
+              step={1}
+              className="mt-2"
+            />
+          </div>
+        </>
+      )}
+
+      <div>
+        <Label className="text-white/70 text-sm mb-2 block">Click Effect</Label>
+        <Select value={profile.click_effect_type} onValueChange={(v) => onChange({ click_effect_type: v })}>
+          <SelectTrigger className="bg-white/5 border-white/10 text-white">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {CLICK_EFFECTS.map((e) => (
+              <SelectItem key={e.id} value={e.id}>
+                {e.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
+
+      {profile.click_effect_type !== "none" && (
+        <>
+          <div>
+            <Label className="text-white/70 text-sm mb-2 block">Effect Color</Label>
+            <ColorPicker
+              value={profile.click_effect_color || "#ffffff"}
+              onChange={(v) => onChange({ click_effect_color: v })}
+            />
+          </div>
+          <div>
+            <Label className="text-white/70 text-sm">Effect Size: {profile.click_effect_size}px</Label>
+            <Slider
+              value={[profile.click_effect_size]}
+              onValueChange={([v]) => onChange({ click_effect_size: v })}
+              min={20}
+              max={60}
+              step={2}
+              className="mt-2"
+            />
+          </div>
+        </>
+      )}
     </div>
   )
 }

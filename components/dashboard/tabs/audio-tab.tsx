@@ -1,77 +1,62 @@
 "use client"
 
-import type { Profile } from "@/lib/types"
 import { Label } from "@/components/ui/label"
+import { Slider } from "@/components/ui/slider"
 import { Switch } from "@/components/ui/switch"
 import { FileUpload } from "@/components/ui/file-upload"
+import type { Profile } from "@/lib/types"
 
-interface AudioTabProps {
+interface Props {
   profile: Profile
-  updateProfile: (updates: Partial<Profile>) => void
+  onChange: (updates: Partial<Profile>) => void
 }
 
-export function AudioTab({ profile, updateProfile }: AudioTabProps) {
+export function AudioTab({ profile, onChange }: Props) {
   return (
     <div className="space-y-4">
-      <h3 className="font-semibold text-lg">Audio Settings</h3>
+      <div>
+        <Label className="text-white/70 text-sm mb-2 block">Audio File</Label>
+        <FileUpload value={profile.audio_url} onChange={(url) => onChange({ audio_url: url })} type="audio" />
+        <p className="text-xs text-white/40 mt-1">If empty, uses video audio</p>
+      </div>
 
-      <div className="space-y-2">
-        <Label>Audio File (MP3)</Label>
-        <FileUpload
-          accept="audio"
-          value={profile.audio_url || ""}
-          onChange={(url) => updateProfile({ audio_url: url })}
+      <div>
+        <Label className="text-white/70 text-sm">Volume: {Math.round(profile.audio_volume * 100)}%</Label>
+        <Slider
+          value={[profile.audio_volume]}
+          onValueChange={([v]) => onChange({ audio_volume: v })}
+          min={0}
+          max={1}
+          step={0.05}
+          className="mt-2"
         />
-        <p className="text-xs text-muted-foreground">Leave empty to use video audio (if video background is set)</p>
+      </div>
+
+      <div>
+        <Label className="text-white/70 text-sm">Tempo: {profile.audio_tempo}x</Label>
+        <Slider
+          value={[profile.audio_tempo]}
+          onValueChange={([v]) => onChange({ audio_tempo: v })}
+          min={0.5}
+          max={2}
+          step={0.05}
+          className="mt-2"
+        />
       </div>
 
       <div className="flex items-center justify-between">
-        <Label htmlFor="audio_autoplay">Autoplay</Label>
-        <Switch
-          id="audio_autoplay"
-          checked={profile.audio_autoplay}
-          onCheckedChange={(checked) => updateProfile({ audio_autoplay: checked })}
-        />
+        <Label className="text-white/70 text-sm">Bass Boost</Label>
+        <Switch checked={profile.audio_bass_boost} onCheckedChange={(v) => onChange({ audio_bass_boost: v })} />
       </div>
 
       <div className="flex items-center justify-between">
-        <Label htmlFor="audio_loop">Loop</Label>
-        <Switch
-          id="audio_loop"
-          checked={profile.audio_loop}
-          onCheckedChange={(checked) => updateProfile({ audio_loop: checked })}
-        />
+        <Label className="text-white/70 text-sm">Preserve Pitch</Label>
+        <Switch checked={profile.audio_preserve_pitch} onCheckedChange={(v) => onChange({ audio_preserve_pitch: v })} />
       </div>
 
-      <div className="border-t border-border pt-4 space-y-3">
-        <h4 className="font-medium">Player Controls</h4>
-
-        <div className="flex items-center justify-between">
-          <Label htmlFor="show_volume">Show Volume Slider</Label>
-          <Switch
-            id="show_volume"
-            checked={profile.show_volume_slider}
-            onCheckedChange={(checked) => updateProfile({ show_volume_slider: checked })}
-          />
-        </div>
-
-        <div className="flex items-center justify-between">
-          <Label htmlFor="show_bass">Show Bass Boost</Label>
-          <Switch
-            id="show_bass"
-            checked={profile.show_bass_boost}
-            onCheckedChange={(checked) => updateProfile({ show_bass_boost: checked })}
-          />
-        </div>
-
-        <div className="flex items-center justify-between">
-          <Label htmlFor="show_tempo">Show Tempo Slider</Label>
-          <Switch
-            id="show_tempo"
-            checked={profile.show_tempo_slider}
-            onCheckedChange={(checked) => updateProfile({ show_tempo_slider: checked })}
-          />
-        </div>
+      <div className="flex items-center justify-between">
+        <Label className="text-white/70 text-sm">Show Controls</Label>
+        <Switch checked={profile.show_audio_controls} onCheckedChange={(v) => onChange({ show_audio_controls: v })} />
       </div>
     </div>
   )

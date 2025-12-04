@@ -1,208 +1,77 @@
 "use client"
 
-import type React from "react"
-import { useRef, useState, useEffect } from "react"
-import { Volume2, VolumeX, Play, Pause, Zap } from "lucide-react"
+import { useState, useRef, useEffect } from "react"
+import { Play, Pause, Volume2 } from "lucide-react"
 import { Slider } from "@/components/ui/slider"
-import { Button } from "@/components/ui/button"
+import type { Profile } from "@/lib/types"
 
-interface AudioPlayerProps {
+interface Props {
+  profile: Profile
   src: string
-  videoRef?: React.RefObject<HTMLVideoElement | null>
-  autoplay?: boolean
-  loop?: boolean
-  showVolume?: boolean
-  showBassBoost?: boolean
-  showTempo?: boolean
-  isPreview?: boolean
 }
 
-export function AudioPlayer({
-  src,
-  videoRef,
-  autoplay = false,
-  loop = true,
-  showVolume = true,
-  showBassBoost = false,
-  showTempo = false,
-  isPreview = false,
-}: AudioPlayerProps) {
+export function AudioPlayer({ profile, src }: Props) {
+  const [playing, setPlaying] = useState(false)
+  const [volume, setVolume] = useState(profile.audio_volume)
   const audioRef = useRef<HTMLAudioElement>(null)
-  const audioContextRef = useRef<AudioContext | null>(null)
-  const bassFilterRef = useRef<BiquadFilterNode | null>(null)
-  const sourceRef = useRef<MediaElementAudioSourceNode | null>(null)
-  const connectedRef = useRef(false)
-
-  const [isPlaying, setIsPlaying] = useState(false)
-  const [volume, setVolume] = useState(0.5)
-  const [isMuted, setIsMuted] = useState(false)
-  const [bassBoost, setBassBoost] = useState(false)
-  const [tempo, setTempo] = useState(1)
-  const [isExpanded, setIsExpanded] = useState(false)
-
-  const audioElement = videoRef?.current || audioRef.current
+  const contextRef = useRef<AudioContext | null>(null)
+  const bassRef = useRef<BiquadFilterNode | null>(null)
 
   useEffect(() => {
-    if (!audioElement) return
-    if (autoplay) {
-      audioElement
-        .play()
-        .then(() => setIsPlaying(true))
-        .catch(() => {})
-    }
-  }, [audioElement, autoplay])
+    const audio = audioRef.current
+    if (!audio) return
 
-  useEffect(() => {
-    if (!audioElement) return
-    audioElement.volume = isMuted ? 0 : volume
-  }, [volume, isMuted, audioElement])
+    audio.volume = volume
+    audio.playbackRate = profile.audio_tempo
+    audio.preservesPitch = profile.audio_preserve_pitch
 
-  useEffect(() => {
-    if (!audioElement) return
-    audioElement.loop = loop
-  }, [loop, audioElement])
-
-  useEffect(() => {
-    if (!audioElement) return
-    audioElement.playbackRate = tempo
-  }, [tempo, audioElement])
-
-  const initAudioContext = () => {
-    if (connectedRef.current) return
-    const element = videoRef?.current || audioRef.current
-    if (!element) return
-
-    try {
+    // Setup bass boost
+    if (profile.audio_bass_boost && !contextRef.current) {
       const ctx = new AudioContext()
-      const source = ctx.createMediaElementSource(element)
+      const source = ctx.createMediaElementSource(audio)
       const bass = ctx.createBiquadFilter()
-
       bass.type = "lowshelf"
       bass.frequency.value = 200
-      bass.gain.value = 0
-
+      bass.gain.value = 15
       source.connect(bass)
       bass.connect(ctx.destination)
-
-      audioContextRef.current = ctx
-      bassFilterRef.current = bass
-      sourceRef.current = source
-      connectedRef.current = true
-    } catch (e) {
-      console.error("Failed to init audio context:", e)
+      contextRef.current = ctx
+      bassRef.current = bass
     }
-  }
+  }, [volume, profile.audio_tempo, profile.audio_preserve_pitch, profile.audio_bass_boost])
 
   const togglePlay = async () => {
-    const element = videoRef?.current || audioRef.current
-    if (!element) return
+    const audio = audioRef.current
+    if (!audio) return
 
-    if (isPlaying) {
-      element.pause()
-      setIsPlaying(false)
+    if (playing) {
+      audio.pause()
     } else {
-      if (showBassBoost && !connectedRef.current) {
-        initAudioContext()
-      }
-      try {
-        await element.play()
-        setIsPlaying(true)
-      } catch (e) {
-        console.error("Failed to play:", e)
-      }
+      await audio.play()
     }
-  }
-
-  const toggleBassBoost = () => {
-    if (!connectedRef.current) {
-      initAudioContext()
-    }
-    if (bassFilterRef.current) {
-      const newBass = !bassBoost
-      bassFilterRef.current.gain.value = newBass ? 15 : 0
-      setBassBoost(newBass)
-    }
-  }
-
-  const handleVolumeChange = (value: number[]) => {
-    setVolume(value[0])
-    if (value[0] > 0) setIsMuted(false)
+    setPlaying(!playing)
   }
 
   return (
-    <>
-      {src && !videoRef && <audio ref={audioRef} src={src} preload="auto" crossOrigin="anonymous" />}
+    <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-3 px-4 py-2 rounded-full bg-black/50 backdrop-blur-sm">
+      <audio ref={audioRef} src={src} loop crossOrigin="anonymous" />
 
-      <div className="bg-black/80 backdrop-blur-lg rounded-lg border border-white/10 transition-all duration-200 p-2">
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" onClick={togglePlay} className="text-white hover:bg-white/10 h-8 w-8">
-            {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-          </Button>
+      <button onClick={togglePlay} className="p-2 rounded-full hover:bg-white/10">
+        {playing ? <Pause className="w-5 h-5 text-white" /> : <Play className="w-5 h-5 text-white" />}
+      </button>
 
-          {showVolume && (
-            <>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setIsMuted(!isMuted)}
-                className="text-white hover:bg-white/10 h-8 w-8"
-              >
-                {isMuted || volume === 0 ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-              </Button>
-
-              {isExpanded && (
-                <div className="w-20">
-                  <Slider
-                    value={[isMuted ? 0 : volume]}
-                    onValueChange={handleVolumeChange}
-                    min={0}
-                    max={1}
-                    step={0.01}
-                    className="cursor-pointer"
-                  />
-                </div>
-              )}
-            </>
-          )}
-
-          {showBassBoost && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={toggleBassBoost}
-              className={`text-white hover:bg-white/10 h-8 w-8 ${bassBoost ? "text-purple-400 bg-purple-400/20" : ""}`}
-              title="Bass Boost"
-            >
-              <Zap className="w-4 h-4" />
-            </Button>
-          )}
-
-          {showTempo && isExpanded && (
-            <div className="flex items-center gap-2">
-              <div className="w-16">
-                <Slider
-                  value={[tempo]}
-                  onValueChange={([v]) => setTempo(v)}
-                  min={0.5}
-                  max={2}
-                  step={0.1}
-                  className="cursor-pointer"
-                />
-              </div>
-              <span className="text-xs text-white/60 w-8">{tempo.toFixed(1)}x</span>
-            </div>
-          )}
-
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="text-white/60 hover:bg-white/10 text-xs h-6 w-6 p-0"
-          >
-            {isExpanded ? "−" : "+"}
-          </Button>
-        </div>
-      </div>
-    </>
+      <Volume2 className="w-4 h-4 text-white/50" />
+      <Slider
+        value={[volume]}
+        onValueChange={([v]) => {
+          setVolume(v)
+          if (audioRef.current) audioRef.current.volume = v
+        }}
+        min={0}
+        max={1}
+        step={0.05}
+        className="w-24"
+      />
+    </div>
   )
 }

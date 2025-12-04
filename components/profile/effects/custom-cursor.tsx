@@ -1,101 +1,59 @@
 "use client"
 
-import type React from "react"
-import { useEffect, useState, useCallback, useRef } from "react"
+import { useEffect, useState } from "react"
 
-interface CustomCursorProps {
+interface Props {
   color?: string | null
-  containerRef?: React.RefObject<HTMLElement>
+  image?: string | null
 }
 
-export function CustomCursor({ color, containerRef }: CustomCursorProps) {
+export function CustomCursor({ color, image }: Props) {
   const [position, setPosition] = useState({ x: 0, y: 0 })
-  const [isVisible, setIsVisible] = useState(false)
-  const frameRef = useRef<number>()
-
-  const safeColor = color || "#ffffff"
-
-  const handleMouseMove = useCallback(
-    (e: MouseEvent) => {
-      if (frameRef.current) return
-
-      frameRef.current = requestAnimationFrame(() => {
-        let x = e.clientX
-        let y = e.clientY
-
-        if (containerRef?.current) {
-          const rect = containerRef.current.getBoundingClientRect()
-          if (e.clientX < rect.left || e.clientX > rect.right || e.clientY < rect.top || e.clientY > rect.bottom) {
-            setIsVisible(false)
-            frameRef.current = undefined
-            return
-          }
-          x = e.clientX - rect.left
-          y = e.clientY - rect.top
-        }
-
-        setPosition({ x, y })
-        setIsVisible(true)
-        frameRef.current = undefined
-      })
-    },
-    [containerRef],
-  )
+  const [visible, setVisible] = useState(false)
 
   useEffect(() => {
-    const target = containerRef?.current || window
-
-    const handleMouseLeave = () => setIsVisible(false)
-    const handleMouseEnter = () => setIsVisible(true)
-
-    target.addEventListener("mousemove", handleMouseMove as EventListener)
-
-    if (containerRef?.current) {
-      containerRef.current.addEventListener("mouseleave", handleMouseLeave)
-      containerRef.current.addEventListener("mouseenter", handleMouseEnter)
-    } else {
-      document.addEventListener("mouseleave", handleMouseLeave)
+    const handleMouseMove = (e: MouseEvent) => {
+      setPosition({ x: e.clientX, y: e.clientY })
+      setVisible(true)
     }
+
+    const handleMouseLeave = () => setVisible(false)
+
+    window.addEventListener("mousemove", handleMouseMove)
+    document.addEventListener("mouseleave", handleMouseLeave)
 
     return () => {
-      target.removeEventListener("mousemove", handleMouseMove as EventListener)
-      if (containerRef?.current) {
-        containerRef.current.removeEventListener("mouseleave", handleMouseLeave)
-        containerRef.current.removeEventListener("mouseenter", handleMouseEnter)
-      } else {
-        document.removeEventListener("mouseleave", handleMouseLeave)
-      }
-      if (frameRef.current) cancelAnimationFrame(frameRef.current)
+      window.removeEventListener("mousemove", handleMouseMove)
+      document.removeEventListener("mouseleave", handleMouseLeave)
     }
-  }, [handleMouseMove, containerRef])
+  }, [])
 
-  if (!isVisible) return null
+  if (!visible) return null
+
+  const cursorColor = color || "#ffffff"
 
   return (
-    <div
-      className={`${containerRef ? "absolute" : "fixed"} pointer-events-none z-[9999]`}
-      style={{
-        left: position.x,
-        top: position.y,
-        transform: "translate(-50%, -50%)",
-      }}
-    >
-      {/* Outer ring */}
+    <>
+      <style jsx global>{`
+        * { cursor: none !important; }
+      `}</style>
       <div
-        className="absolute w-8 h-8 rounded-full border-2 transition-transform duration-100"
+        className="fixed pointer-events-none z-[9999]"
         style={{
-          borderColor: safeColor,
+          left: position.x,
+          top: position.y,
           transform: "translate(-50%, -50%)",
         }}
-      />
-      {/* Inner dot */}
-      <div
-        className="absolute w-2 h-2 rounded-full"
-        style={{
-          backgroundColor: safeColor,
-          transform: "translate(-50%, -50%)",
-        }}
-      />
-    </div>
+      >
+        {image ? (
+          <img src={image || "/placeholder.svg"} alt="" className="w-8 h-8" />
+        ) : (
+          <div
+            className="w-5 h-5 rounded-full border-2"
+            style={{ borderColor: cursorColor, backgroundColor: cursorColor + "40" }}
+          />
+        )}
+      </div>
+    </>
   )
 }
