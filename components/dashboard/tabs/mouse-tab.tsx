@@ -36,7 +36,7 @@ export function MouseTab({ profile, updateProfile }: MouseTabProps) {
       <div className="space-y-3">
         <Label>Cursor Type</Label>
         <RadioGroup
-          value={profile.cursor_type}
+          value={profile.cursor_type || "default"}
           onValueChange={(value) => updateProfile({ cursor_type: value as Profile["cursor_type"] })}
           className="grid grid-cols-3 gap-2"
         >
@@ -62,9 +62,9 @@ export function MouseTab({ profile, updateProfile }: MouseTabProps) {
       </div>
 
       {profile.cursor_type === "custom" && (
-        <>
+        <div className="space-y-4 p-3 rounded-lg bg-muted/50 border border-border">
           <div className="space-y-2">
-            <Label>Cursor Image</Label>
+            <Label>Cursor Image (optional)</Label>
             <FileUpload
               type="image"
               value={profile.cursor_image_url || ""}
@@ -73,11 +73,11 @@ export function MouseTab({ profile, updateProfile }: MouseTabProps) {
           </div>
 
           <ColorPicker
-            label="Cursor Color (if no image)"
-            value={profile.cursor_color}
+            label="Cursor Color (used if no image)"
+            value={profile.cursor_color || "#ffffff"}
             onChange={(value) => updateProfile({ cursor_color: value })}
           />
-        </>
+        </div>
       )}
 
       <div className="border-t border-border pt-4 space-y-3">
@@ -87,13 +87,13 @@ export function MouseTab({ profile, updateProfile }: MouseTabProps) {
           <Label htmlFor="trail_enabled">Enable Trail</Label>
           <Switch
             id="trail_enabled"
-            checked={profile.mouse_trail_enabled}
+            checked={profile.mouse_trail_enabled || false}
             onCheckedChange={(checked) => updateProfile({ mouse_trail_enabled: checked })}
           />
         </div>
 
         {profile.mouse_trail_enabled && (
-          <>
+          <div className="space-y-4 p-3 rounded-lg bg-muted/50 border border-border">
             <div className="flex items-center justify-between">
               <Label htmlFor="trail_rainbow">Rainbow Mode</Label>
               <Switch
@@ -106,15 +106,15 @@ export function MouseTab({ profile, updateProfile }: MouseTabProps) {
             {!profile.mouse_trail_rainbow && (
               <ColorPicker
                 label="Trail Color"
-                value={profile.mouse_trail_color}
+                value={profile.mouse_trail_color || "#ffffff"}
                 onChange={(value) => updateProfile({ mouse_trail_color: value })}
               />
             )}
 
             <div className="space-y-2">
-              <Label>Trail Length: {profile.mouse_trail_length}</Label>
+              <Label>Trail Length: {profile.mouse_trail_length || 20}</Label>
               <Slider
-                value={[profile.mouse_trail_length]}
+                value={[profile.mouse_trail_length || 20]}
                 onValueChange={([value]) => updateProfile({ mouse_trail_length: value })}
                 min={5}
                 max={50}
@@ -141,7 +141,7 @@ export function MouseTab({ profile, updateProfile }: MouseTabProps) {
                 onCheckedChange={(checked) => updateProfile({ mouse_trail_fade: checked })}
               />
             </div>
-          </>
+          </div>
         )}
       </div>
 
@@ -152,13 +152,13 @@ export function MouseTab({ profile, updateProfile }: MouseTabProps) {
           <Label htmlFor="click_enabled">Enable Click Effect</Label>
           <Switch
             id="click_enabled"
-            checked={profile.click_effect_enabled}
+            checked={profile.click_effect_enabled || false}
             onCheckedChange={(checked) => updateProfile({ click_effect_enabled: checked })}
           />
         </div>
 
         {profile.click_effect_enabled && (
-          <>
+          <div className="space-y-4 p-3 rounded-lg bg-muted/50 border border-border">
             <div className="space-y-3">
               <Label>Effect Type</Label>
               <div className="grid grid-cols-3 gap-2">
@@ -180,10 +180,10 @@ export function MouseTab({ profile, updateProfile }: MouseTabProps) {
 
             <ColorPicker
               label="Effect Color"
-              value={profile.click_effect_color}
+              value={profile.click_effect_color || "#ffffff"}
               onChange={(value) => updateProfile({ click_effect_color: value })}
             />
-          </>
+          </div>
         )}
       </div>
     </div>

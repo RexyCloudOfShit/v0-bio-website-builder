@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils"
 import { Sparkles } from "lucide-react"
 
 interface ColorPickerProps {
-  value: string
+  value?: string | null // Made value optional and nullable
   onChange: (value: string) => void
   label?: string
   className?: string
@@ -33,17 +33,18 @@ const PRESET_COLORS = [
 ]
 
 export function ColorPicker({ value, onChange, label, className }: ColorPickerProps) {
+  const safeValue = value || "#ffffff"
   const [isOpen, setIsOpen] = useState(false)
-  const [localValue, setLocalValue] = useState(value)
+  const [localValue, setLocalValue] = useState(safeValue)
   const [rgbMode, setRgbMode] = useState(false)
   const rgbIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const hueRef = useRef(0)
 
   useEffect(() => {
     if (!rgbMode) {
-      setLocalValue(value)
+      setLocalValue(safeValue)
     }
-  }, [value, rgbMode])
+  }, [safeValue, rgbMode])
 
   useEffect(() => {
     if (rgbMode) {
@@ -74,6 +75,7 @@ export function ColorPicker({ value, onChange, label, className }: ColorPickerPr
   }
 
   const getHexColor = (color: string) => {
+    if (!color) return "#ffffff"
     if (color.startsWith("#") && (color.length === 7 || color.length === 4)) {
       return color
     }
