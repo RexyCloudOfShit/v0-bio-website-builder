@@ -11,6 +11,8 @@ import { useRouter } from "next/navigation"
 import { useState, useEffect } from "react"
 import { Loader2, Sparkles } from "lucide-react"
 
+const PRODUCTION_URL = "https://niga.bio"
+
 export default function SignUpPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -105,10 +107,13 @@ export default function SignUpPage() {
     }
 
     try {
+      const redirectUrl = process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || `${PRODUCTION_URL}/auth/callback`
+
       const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: {
+          emailRedirectTo: redirectUrl,
           data: {
             username: cleanUsername,
             display_name: username,

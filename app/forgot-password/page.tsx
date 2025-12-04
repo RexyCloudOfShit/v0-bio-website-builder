@@ -9,6 +9,8 @@ import { Label } from "@/components/ui/label"
 import Link from "next/link"
 import { useState } from "react"
 
+const PRODUCTION_URL = "https://niga.bio"
+
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("")
   const [error, setError] = useState<string | null>(null)
@@ -22,8 +24,10 @@ export default function ForgotPasswordPage() {
 
     const supabase = createClient()
 
+    const redirectUrl = process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || `${PRODUCTION_URL}/reset-password`
+
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
+      redirectTo: redirectUrl,
     })
 
     if (error) {
